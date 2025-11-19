@@ -90,6 +90,8 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.opt.termguicolors = true
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
@@ -161,10 +163,20 @@ vim.o.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
 
+-- Set command line height to 0 (hides when not in use)
+vim.o.cmdheight = 0
+
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
 -- See `:help 'confirm'`
 vim.o.confirm = true
+
+-- [[ Tab and Indentation Settings ]]
+-- Set default tab to 4 spaces
+vim.o.tabstop = 4
+vim.o.shiftwidth = 4
+vim.o.expandtab = true
+vim.o.softtabstop = 4
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -247,7 +259,7 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-  'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
+  -- 'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -472,7 +484,129 @@ require('lazy').setup({
     end,
   },
 
+  --[[ Pluggers ]]
+
+  -- Lazygit
+  -- nvim v0.8.0
+  {
+    'kdheepak/lazygit.nvim',
+    lazy = true,
+    cmd = {
+      'LazyGit',
+      'LazyGitConfig',
+      'LazyGitCurrentFile',
+      'LazyGitFilter',
+      'LazyGitFilterCurrentFile',
+    },
+    -- optional for floating window border decoration
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    -- setting the keybinding for LazyGit with 'keys' is recommended in
+    -- order to load the plugin when the command is run for the first time
+    keys = {
+      { '<leader>lg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
+    },
+  },
+
+  -- Highlight hex codes
+  {
+    'brenoprata10/nvim-highlight-colors',
+    config = function()
+      require('nvim-highlight-colors').setup {}
+    end,
+  },
+
+  -- Guess indents
+  {
+    'NMAC427/guess-indent.nvim',
+    config = function()
+      require('guess-indent').setup {}
+    end,
+  },
+
+  -- Hide comments
+  {
+    'soemre/commentless.nvim',
+    cmd = 'Commentless',
+    keys = {
+      {
+        '<leader><M-/>',
+        function()
+          require('commentless').toggle()
+        end,
+        desc = 'Toggle Comments',
+      },
+    },
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+    },
+    opts = {
+      -- Customize Configuration
+    },
+  },
+
+  -- Plugin to add an indent line
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    ---@module "ibl"
+    ---@type ibl.config
+    opts = {},
+  },
+
+  -- Status line
+  {
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      ---@diagnostic disable-next-line: missing-fields
+
+      local colors = {
+        black = '#212121',
+      }
+      local custom_jellybeans = require 'lualine.themes.jellybeans'
+      custom_jellybeans.normal.c.bg = colors.black
+      custom_jellybeans.normal.b.bg = colors.black
+
+      require('lualine').setup {
+        options = { theme = custom_jellybeans, section_separators = '', component_separators = '' },
+      }
+    end,
+  },
+
+  -- Plugin to comment out code
+  {
+    'numToStr/Comment.nvim',
+    opts = {
+      -- add any options here
+    },
+  },
+
+  -- Bracket auto pair
+  {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true,
+    -- use opts = {} for passing setup options
+    -- this is equivalent to setup({}) function
+  },
+
+  -- Smooth scrolling
+  {
+    'karb94/neoscroll.nvim',
+    opts = {},
+  },
+
   -- LSP Plugins
+
+  -- Racket language server tools
+  {
+    'Olical/conjure',
+    ft = { 'racket', 'scheme' },
+    lazy = true,
+    init = function() end,
+  },
   {
     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
     -- used for completion, annotations and signatures of Neovim apis
@@ -497,6 +631,9 @@ require('lazy').setup({
         opts = {
           registries = {
             'github:mason-org/mason-registry',
+          },
+          servers = {
+            racket_langserver = {},
           },
         },
       },
@@ -901,26 +1038,20 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'projekt0n/github-nvim-theme',
+    'nickkadutskyi/jb.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     config = function()
       ---@diagnostic disable-next-line: missing-fields
 
-      require('github-theme').setup {
-        -- transparent = true,
+      require('jb').setup {
+        transparent = true,
       }
 
-      -- Enhanced transparency with auto-commands
-      local function set_transparency()
-        vim.cmd [[
-          highlight Normal guibg=NONE ctermbg=NONE
-        ]]
-      end
-
       -- Load the colorscheme here.
-      vim.cmd.colorscheme 'default'
+      vim.cmd.colorscheme 'jb'
 
-      set_transparency()
+      -- Set command area color
+      vim.api.nvim_set_hl(0, 'MsgArea', { bg = '#212121' })
     end,
   },
 
@@ -944,21 +1075,6 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
-
-      -- Simple and easy statusline.
-      --  You could remove this setup call if you don't like it,
-      --  and try some other statusline plugin
-      local statusline = require 'mini.statusline'
-      -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
-
-      -- You can configure sections in the statusline by overriding their
-      -- default behavior. For example, here we set the section for
-      -- cursor location to LINE:COLUMN
-      ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function()
-        return '%2l:%-2v'
-      end
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
