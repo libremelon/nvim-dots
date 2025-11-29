@@ -486,6 +486,27 @@ require('lazy').setup({
 
   --[[ Pluggers ]]
 
+  -- Tree-view based file browser
+  {
+    'stevearc/oil.nvim',
+    ---@module 'oil'
+    ---@type oil.SetupOpts
+    opts = {},
+    -- Optional dependencies
+    dependencies = { { 'nvim-mini/mini.icons', opts = {} } },
+    -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
+    -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
+    lazy = false,
+
+    config = function()
+      require('oil').setup {}
+    end,
+
+    vim.keymap.set('n', '<leader>e', function()
+      require('oil').open()
+    end, { desc = 'Open Oil in current directory' }),
+  },
+
   -- Obsidian
   {
     'epwalsh/obsidian.nvim',
@@ -506,20 +527,26 @@ require('lazy').setup({
 
       -- see below for full list of optional dependencies 👇
     },
-    opts = {
-      workspaces = {
-        {
-          name = 'personal',
-          path = '~/vaults/personal',
+    opts = {},
+    config = function()
+      require('obsidian').setup {
+        workspaces = {
+          {
+            name = 'vault0',
+            path = '~/Cloud/obsidian-vaults/vault0/',
+          },
         },
-        {
-          name = 'work',
-          path = '~/vaults/work',
+        ui = {
+          enable = true,
         },
-      },
-
-      -- see below for full list of options 👇
-    },
+        vim.api.nvim_create_autocmd('FileType', {
+          pattern = 'markdown',
+          callback = function()
+            vim.wo.conceallevel = 2
+          end,
+        }),
+      }
+    end,
   },
 
   -- Lazygit
@@ -961,8 +988,10 @@ require('lazy').setup({
         lua = { 'stylua' },
         cpp = { 'clang-format' },
         c = { 'clang-format' },
+        python = { 'black' },
+
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        -- python = { 'isort', 'black' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
